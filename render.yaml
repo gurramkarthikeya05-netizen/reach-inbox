@@ -1,0 +1,58 @@
+services:
+  - type: web
+    name: reachinbox-api
+    runtime: node
+    plan: free
+    region: oregon
+    healthCheckPath: /health/live
+    buildCommand: >-
+      corepack enable &&
+      pnpm install --frozen-lockfile &&
+      pnpm --filter @reachinbox/api db:generate &&
+      pnpm --filter @reachinbox/api... build &&
+      pnpm --filter @reachinbox/api exec prisma migrate deploy
+    startCommand: pnpm --filter @reachinbox/api start:all
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: WORKER_CONCURRENCY
+        value: "2"
+      - key: MIN_SEND_INTERVAL_MS
+        value: "2000"
+      - key: MAX_EMAILS_PER_HOUR_PER_SENDER
+        value: "200"
+      - key: MAX_RECIPIENTS_PER_CAMPAIGN
+        value: "5000"
+      # Set in the dashboard. Never commit these values.
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: WEB_ORIGIN
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CALLBACK_URL
+        sync: false
+      - key: SMTP_SENDERS_JSON
+        sync: false
+
+  - type: web
+    name: reachinbox-web
+    runtime: static
+    buildCommand: >-
+      corepack enable &&
+      pnpm install --frozen-lockfile &&
+      pnpm --filter @reachinbox/web... build
+    staticPublishPath: apps/web/dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

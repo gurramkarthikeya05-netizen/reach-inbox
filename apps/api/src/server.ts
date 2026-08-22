@@ -11,9 +11,13 @@ import { closeInfrastructure, prisma, redis, sessionRedis } from './infrastructu
 import { apiRouter } from './routes.js';
 
 await sessionRedis.connect();
-    
+
+const isProduction = config.NODE_ENV === 'production';
+
 const app = express();
 app.disable('x-powered-by');
+// Render terminates TLS at its proxy, so secure cookies need the forwarded protocol.
+if (isProduction) app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors({ origin: config.WEB_ORIGIN, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
@@ -32,8 +36,9 @@ app.use(
 		saveUninitialized: false,
 		cookie: {
 			httpOnly: true,
-			secure: config.NODE_ENV === 'production',
-			sameSite: 'lax',
+			secure: isProduction,
+			// The dashboard is served from a different origin in production.
+			sameSite: isProduction ? 'none' : 'lax',
 			maxAge: 7 * 24 * 60 * 60 * 1000,
 		},
 	}),

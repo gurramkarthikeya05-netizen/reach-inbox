@@ -1,5 +1,8 @@
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
+import { existsSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { RedisStore } from 'connect-redis';
 import cors from 'cors';
 import express from 'express';
@@ -13,12 +16,22 @@ import { apiRouter } from './routes.js';
 await sessionRedis.connect();
 
 const isProduction = config.NODE_ENV === 'production';
+// Present only in a deployed build, where the dashboard is served from this origin.
+const webDist = resolve(dirname(fileURLToPath(import.meta.url)), '../../../web/dist');
+const servesWeb = existsSync(join(webDist, 'index.html'));
 
 const app = express();
 app.disable('x-powered-by');
 // Render terminates TLS at its proxy, so secure cookies need the forwarded protocol.
 if (isProduction) app.set('trust proxy', 1);
-app.use(helmet());
+app.use(
+	helmet({
+		contentSecurityPolicy: {
+			useDefaults: true,
+			directives: { 'img-src': ["'self'", 'data:', 'https://lh3.googleusercontent.com'] },
+		},
+	}),
+);
 app.use(cors({ origin: config.WEB_ORIGIN, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 app.use((request, response, next) => {
@@ -37,8 +50,7 @@ app.use(
 		cookie: {
 			httpOnly: true,
 			secure: isProduction,
-			// The dashboard is served from a different origin in production.
-			sameSite: isProduction ? 'none' : 'lax',
+			sameSite: 'lax',
 			maxAge: 7 * 24 * 60 * 60 * 1000,
 		},
 	}),
@@ -55,6 +67,12 @@ app.get('/health/ready', async (_request, response) => {
 	}
 });
 app.use('/api', apiRouter);
+if (servesWeb) {
+	app.use(express.static(webDist));
+	app.get(/^(?!\/api\/|\/health\/).*/, (_request, response) =>
+		response.sendFile(join(webDist, 'index.html')),
+	);
+}
 app.use(
 	(
 		error: unknown,

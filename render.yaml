@@ -12,7 +12,8 @@ services:
       pnpm install --frozen-lockfile &&
       pnpm --filter @reachinbox/api db:generate &&
       pnpm --filter @reachinbox/api... build &&
-      pnpm --filter @reachinbox/api exec prisma migrate deploy
+      pnpm --filter @reachinbox/api exec prisma migrate deploy &&
+      pnpm --filter @reachinbox/api db:seed
     startCommand: node apps/api/dist/src/main.js
     envVars:
       - key: NODE_ENV

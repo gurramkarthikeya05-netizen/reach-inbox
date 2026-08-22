@@ -296,8 +296,9 @@ remains the closer model to a real deployment.
    service down after 15 idle minutes, which would pause scheduled sends until the next request.
 
 Migrations run through `prisma migrate deploy` inside the build command, because Render's
-pre-deploy hook is a paid feature. Seed the sender rows once with `pnpm db:seed` from a local
-shell pointed at the production `DATABASE_URL` (free Render services have no shell access).
+pre-deploy hook is a paid feature. The sender seed runs there too: it is idempotent
+(deactivate-then-upsert against `SMTP_SENDERS_JSON`), and free Render services have no shell
+access for a manual run.
 
 ### Hosted Limitations
 

@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  RUNNING
+  COMPLETED
+  PARTIALLY_FAILED
+  FAILED
+}
+
+enum EmailStatus {
+  PENDING_ENQUEUE
+  QUEUED
+  SENDING
+  SENT
+  FAILED
+  DELIVERY_UNKNOWN
+}
+
+model User {
+  id              String     @id @default(cuid())
+  googleSubjectId String     @unique
+  email           String     @unique
+  name            String
+  avatarUrl       String?
+  campaigns       Campaign[]
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+model Sender {
+  id               String     @id
+  name             String
+  email            String     @unique
+  maxEmailsPerHour Int
+  active           Boolean    @default(true)
+  campaigns        Campaign[]
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+}
+
+model Campaign {
+  id              String         @id @default(cuid())
+  ownerId         String
+  senderId        String
+  subject         String
+  htmlBody        String         @db.Text
+  textBody        String         @db.Text
+  startAt         DateTime
+  delaySeconds    Int
+  hourlyLimit     Int
+  recipientCount  Int
+  status          CampaignStatus @default(DRAFT)
+  owner           User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  sender          Sender         @relation(fields: [senderId], references: [id], onDelete: Restrict)
+  emails          EmailJob[]
+  attachments     Attachment[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([ownerId, status, createdAt])
+  @@index([senderId, status])
+}
+
+model EmailJob {
+  id                String      @id @default(cuid())
+  campaignId        String
+  recipient         String
+  sequenceIndex     Int
+  intendedAt        DateTime
+  scheduledAt       DateTime
+  status            EmailStatus @default(PENDING_ENQUEUE)
+  bullJobId         String      @unique
+  attemptCount      Int         @default(0)
+  claimedAt         DateTime?
+  sentAt            DateTime?
+  providerMessageId String?
+  previewUrl        String?
+  failureReason     String?
+  campaign          Campaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@unique([campaignId, recipient])
+  @@index([campaignId, sequenceIndex])
+  @@index([status, scheduledAt])
+}
+
+model Attachment {
+  id         String   @id @default(cuid())
+  campaignId String
+  filename   String
+  mimeType   String
+  size       Int
+  content    Bytes
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@index([campaignId])
+}

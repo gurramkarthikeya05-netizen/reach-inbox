@@ -1,0 +1,23 @@
+{
+	"name": "reachinbox-scheduler",
+	"private": true,
+	"packageManager": "pnpm@11.2.2",
+	"scripts": {
+		"dev": "pnpm --parallel --filter @reachinbox/api --filter @reachinbox/web dev",
+		"dev:api": "pnpm --filter @reachinbox/api dev",
+		"dev:worker": "pnpm --filter @reachinbox/api dev:worker",
+		"dev:web": "pnpm --filter @reachinbox/web dev",
+		"build": "pnpm -r build",
+		"typecheck": "pnpm -r typecheck",
+		"test": "pnpm -r test",
+		"lint": "pnpm -r lint",
+		"db:generate": "pnpm --filter @reachinbox/api db:generate",
+		"db:migrate": "pnpm --filter @reachinbox/api db:migrate",
+		"db:seed": "pnpm --filter @reachinbox/api db:seed",
+		"check:smtp": "pnpm --filter @reachinbox/api check:smtp"
+	},
+	"devDependencies": {
+		"prettier": "3.6.2",
+		"typescript": "5.9.2"
+	}
+}

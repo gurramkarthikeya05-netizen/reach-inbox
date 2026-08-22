@@ -1,1 +1,12 @@
-Hoste
+Dashboard: https://reachinbox-web-0g10.onrender.com
+API:       https://reachinbox-api-t892.onrender.com
+Health:    https://reachinbox-api-t892.onrender.com/health/ready
+
+Note: the hosted instance schedules, queues, rate-limits, and tracks state
+correctly, but cannot deliver mail. Render's free tier blocks outbound SMTP
+ports 25/465/587, so sends fail at connect. Delivery is shown in the demo
+video against a local SMTP sink.
+
+Free instances sleep after 15 idle minutes; the first request may take
+about a minute to wake the API.
+

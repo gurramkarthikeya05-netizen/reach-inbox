@@ -1,6 +1,8 @@
-Dashboard: https://reachinbox-web-0g10.onrender.com
-API:       https://reachinbox-api-t892.onrender.com
-Health:    https://reachinbox-api-t892.onrender.com/health/ready
+App:    https://reachinbox-api-t892.onrender.com
+Health: https://reachinbox-api-t892.onrender.com/health/ready
+
+The dashboard and the API share one origin so the session cookie stays
+first-party; every onrender.com subdomain counts as a separate site.
 
 Note: the hosted instance schedules, queues, rate-limits, and tracks state
 correctly, but cannot deliver mail. Render's free tier blocks outbound SMTP

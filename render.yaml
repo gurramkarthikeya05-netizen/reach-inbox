@@ -6,6 +6,7 @@ services:
     region: oregon
     healthCheckPath: /health/live
     buildCommand: >-
+      mkdir -p /tmp/corepack-bin &&
       corepack enable --install-directory /tmp/corepack-bin &&
       export PATH="/tmp/corepack-bin:$PATH" &&
       pnpm install --frozen-lockfile &&
@@ -48,6 +49,7 @@ services:
     name: reachinbox-web
     runtime: static
     buildCommand: >-
+      mkdir -p /tmp/corepack-bin &&
       corepack enable --install-directory /tmp/corepack-bin &&
       export PATH="/tmp/corepack-bin:$PATH" &&
       pnpm install --frozen-lockfile &&

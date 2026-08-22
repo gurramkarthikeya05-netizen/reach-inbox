@@ -6,15 +6,18 @@ services:
     region: oregon
     healthCheckPath: /health/live
     buildCommand: >-
-      corepack enable &&
+      corepack enable --install-directory /tmp/corepack-bin &&
+      export PATH="/tmp/corepack-bin:$PATH" &&
       pnpm install --frozen-lockfile &&
       pnpm --filter @reachinbox/api db:generate &&
       pnpm --filter @reachinbox/api... build &&
       pnpm --filter @reachinbox/api exec prisma migrate deploy
-    startCommand: pnpm --filter @reachinbox/api start:all
+    startCommand: node apps/api/dist/src/main.js
     envVars:
       - key: NODE_ENV
         value: production
+      - key: COREPACK_ENABLE_DOWNLOAD_PROMPT
+        value: "0"
       - key: SESSION_SECRET
         generateValue: true
       - key: WORKER_CONCURRENCY
@@ -45,11 +48,14 @@ services:
     name: reachinbox-web
     runtime: static
     buildCommand: >-
-      corepack enable &&
+      corepack enable --install-directory /tmp/corepack-bin &&
+      export PATH="/tmp/corepack-bin:$PATH" &&
       pnpm install --frozen-lockfile &&
       pnpm --filter @reachinbox/web... build
     staticPublishPath: apps/web/dist
     envVars:
+      - key: COREPACK_ENABLE_DOWNLOAD_PROMPT
+        value: "0"
       - key: VITE_API_URL
         sync: false
     routes:
